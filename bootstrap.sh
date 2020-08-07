@@ -150,17 +150,16 @@ install() {
 
 create_slock_user_and_group() {
   user=slock
-  if ! getent passwd "$(user)" > /dev/null 2>&1; then
-    useradd -Mrs $(which nologin)
+  if ! getent passwd "${user}" > /dev/null 2>&1; then
     case $os in
       debian|ubuntu)
-        useradd -Mrs /usr/sbin/nologin "${user}"
+        run_as_root useradd -d / -rs /usr/sbin/nologin "${user}"
       ;;
       arch)
-        useradd -Mrs /usr/bin/nologin "${user}"
+        run_as_root useradd -d / -rs /usr/bin/nologin "${user}"
       ;;
       artix|alpine)
-        useradd -Mrs /sbin/nologin "${user}"
+        run_as_root useradd -d / -rs /sbin/nologin "${user}"
       ;;
       *)
         error "Unsupported OS: $NAME"
@@ -184,6 +183,10 @@ main() {
   setup_color
   update
   install
+  create_slock_user_and_group || {
+    error "Failed to create slock user and group"
+    exit 1;
+  }
 }
 
 main "$@"
